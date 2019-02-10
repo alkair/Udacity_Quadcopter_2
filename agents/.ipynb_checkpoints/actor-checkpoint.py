@@ -36,17 +36,26 @@ class Actor:
         """Build an actor (policy) network that maps states -> actions."""
         # Define input layer (states)
         states = layers.Input(shape=(self.state_size,), name='states')
-
+        l2_reg=1e-2
         # Add hidden layers
-        net = layers.Dense(units=32, activation='relu')(states)
-        net = layers.Dense(units=64, activation='relu')(net)
-        net = layers.Dense(units=32, activation='relu')(net)
+        net = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net = layers.BatchNormalization()(net)
+        net = layers.LeakyReLU(1e-2)(net)
+
+        net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net = layers.BatchNormalization()(net)
+        net = layers.LeakyReLU(1e-2)(net)
+        
+        net = layers.Dense(units=128, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net = layers.BatchNormalization()(net)
+        net = layers.LeakyReLU(1e-2)(net)
 
         # Try different layer sizes, activations, add batch normalization, regularizers, etc.
 
         # Add final output layer with sigmoid activation
-        raw_actions = layers.Dense(units=self.action_size, activation='sigmoid',
-            name='raw_actions')(net)
+        #raw_actions = layers.Dense(units=self.action_size, activation='tanh', kernel_regularizer=regularizers.l2(1e-5), kernel_initializer=initializers.RandomUniform(minval=-3e-3, maxval=3e-3), name='raw_actions')(net)
+        
+        raw_actions = layers.Dense(units=self.action_size, activation='sigmoid', kernel_initializer=initializers.RandomUniform(minval=-3e-3, maxval=3e-3), name='raw_actions')(net)
 
         # Scale [0, 1] output for each action dimension to proper range
         actions = layers.Lambda(lambda x: (x * self.action_range) + self.action_low,

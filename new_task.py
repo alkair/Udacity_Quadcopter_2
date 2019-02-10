@@ -1,10 +1,12 @@
 import numpy as np
+import math
+from math import e
 from physics_sim import PhysicsSim
 
-class Task():
+class newTask():
     """Task (environment) that defines the goal and provides feedback to the agent."""
     def __init__(self, init_pose=None, init_velocities=None, 
-        init_angle_velocities=None, runtime=5., target_pos=None):
+        init_angle_velocities=None, runtime=6., target_pos=None):
         """Initialize a Task object.
         Params
         ======
@@ -15,6 +17,7 @@ class Task():
             target_pos: target/goal (x,y,z) position for the agent
         """
         # Simulation
+        self.init_pose=init_pose
         self.sim = PhysicsSim(init_pose, init_velocities, init_angle_velocities, runtime) 
         self.action_repeat = 2
 
@@ -28,12 +31,21 @@ class Task():
 
     def get_reward(self):
         """Uses current pose of sim to return reward."""
-        reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
+        Betha = 10.
+        sigma = 3.0
+        pos_differece = self.sim.pose[2] - self.target_pos[2]
+        x = -1.0 * (pos_differece**2)/(2*(sigma**2))
+        if self.init_pose[2] > self.sim.pose[2]:
+            reward = Betha * math.exp(x) - 0.5*abs(self.init_pose[2] - self.sim.pose[2])
+        else:
+            reward = Betha * math.exp(x)
+        
+        #reward = 1.-.5*(abs(self.sim.pose[:3] - self.target_pos)).sum()
         return reward
 
     def step(self, rotor_speeds):
         """Uses action to obtain next state, reward, done."""
-        reward = 0
+        reward = 0.
         pose_all = []
         for _ in range(self.action_repeat):
             done = self.sim.next_timestep(rotor_speeds) # update the sim pose and velocities
