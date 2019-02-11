@@ -7,6 +7,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import activations
 from tensorflow.keras import regularizers
 from tensorflow.keras import initializers
+import math
 
 
 class Actor:
@@ -37,16 +38,17 @@ class Actor:
         # Define input layer (states)
         states = layers.Input(shape=(self.state_size,), name='states')
         l2_reg=1e-2
+        init_val=1 / math.sqrt(self.state_size)
         # Add hidden layers
-        net = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-init_val, maxval=init_val))(states)
         net = layers.BatchNormalization()(net)
         net = layers.LeakyReLU(1e-2)(net)
 
-        net = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/20, maxval=1/20))(states)
         net = layers.BatchNormalization()(net)
         net = layers.LeakyReLU(1e-2)(net)
         
-        net = layers.Dense(units=128, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/17, maxval=1/17))(states)
         net = layers.BatchNormalization()(net)
         net = layers.LeakyReLU(1e-2)(net)
 
@@ -71,7 +73,7 @@ class Actor:
         # Incorporate any additional losses here (e.g. from regularizers)
 
         # Define optimizer and training function
-        optimizer = optimizers.Adam()
+        optimizer = optimizers.Adam(lr=1e-4)
         updates_op = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         self.train_fn = K.function(
             inputs=[self.model.input, action_gradients, K.learning_phase()],

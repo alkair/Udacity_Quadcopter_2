@@ -8,6 +8,8 @@ from tensorflow.keras import activations
 from tensorflow.keras import regularizers
 from tensorflow.keras import initializers
 
+import math
+
 
 class Critic:
     """Critic (Value) Model."""
@@ -29,26 +31,28 @@ class Critic:
 
     def build_model(self):
         l2_reg=1e-2
+        init_val_state=1 / math.sqrt(self.state_size)
+        init_val_action=1 / math.sqrt(self.action_size)
         """Build a critic (value) network that maps (state, action) pairs -> Q-values."""
         # Define input layers
         states = layers.Input(shape=(self.state_size,), name='states')
         actions = layers.Input(shape=(self.action_size,), name='actions')
 
         # Add hidden layer(s) for state pathway
-        net_states = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg))(states)
+        net_states = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-init_val_state, maxval=init_val_state))(states)
         net_states = layers.BatchNormalization()(net_states)
         net_states = layers.LeakyReLU(1e-2)(net_states)
         
-        net_states = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg))(net_states)
+        net_states = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/20, maxval=1/20))(net_states)
         net_states = layers.BatchNormalization()(net_states)
         net_states = layers.LeakyReLU(1e-2)(net_states)
 
         # Add hidden layer(s) for action pathway
-        net_actions = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg))(actions)
+        net_actions = layers.Dense(units=400, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-init_val_action, maxval=init_val_action))(actions)
         net_actions = layers.BatchNormalization()(net_actions)
         net_actions = layers.LeakyReLU(1e-2)(net_actions)
         
-        net_actions = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg))(net_actions)
+        net_actions = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/20, maxval=1/20))(net_actions)
         net_actions = layers.BatchNormalization()(net_actions)
         net_actions = layers.LeakyReLU(1e-2)(net_actions)
 
@@ -56,7 +60,8 @@ class Critic:
 
         # Combine state and action pathways
         net = layers.Add()([net_states, net_actions])
-        net = layers.Activation('relu')(net)
+        #net = layers.Activation('relu')(net)
+        net = layers.LeakyReLU(1e-2)(net)
         
         # Fully connected and batch normalization
         net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg))(net)
@@ -72,7 +77,7 @@ class Critic:
         self.model = models.Model(inputs=[states, actions], outputs=Q_values)
 
         # Define optimizer and compile model for training with built-in loss function
-        optimizer = optimizers.Adam()
+        optimizer = optimizers.Adam(lr=1e-3)
         self.model.compile(optimizer=optimizer, loss='mse')
 
         # Compute action gradients (derivative of Q values w.r.t. to actions)

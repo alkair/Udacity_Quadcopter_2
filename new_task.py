@@ -19,7 +19,7 @@ class newTask():
         # Simulation
         self.init_pose=init_pose
         self.sim = PhysicsSim(init_pose, init_velocities, init_angle_velocities, runtime) 
-        self.action_repeat = 2
+        self.action_repeat = 3
 
         self.state_size = self.action_repeat * 6
         self.action_low = 0
@@ -33,12 +33,12 @@ class newTask():
         """Uses current pose of sim to return reward."""
         Betha = 10.
         sigma = 3.0
-        pos_differece = self.sim.pose[2] - self.target_pos[2]
-        x = -1.0 * (pos_differece**2)/(2*(sigma**2))
-        if self.init_pose[2] > self.sim.pose[2]:
-            reward = Betha * math.exp(x) - 0.5*abs(self.init_pose[2] - self.sim.pose[2])
-        else:
-            reward = Betha * math.exp(x)
+        pos_differece = (self.sim.pose[:3] - self.target_pos).sum()
+        x = -1.0 * (pos_differece**2)/(2.0*(sigma**2))
+        #if self.init_pose[2] > self.sim.pose[2]:
+        #    reward = Betha * math.exp(x) - 0.1*abs(self.init_pose[2] - self.sim.pose[2])
+       # else:
+        reward = Betha * math.exp(x)
         
         #reward = 1.-.5*(abs(self.sim.pose[:3] - self.target_pos)).sum()
         return reward
