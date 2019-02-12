@@ -48,7 +48,11 @@ class Actor:
         net = layers.BatchNormalization()(net)
         net = layers.LeakyReLU(1e-2)(net)
         
-        net = layers.Dense(units=300, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/17, maxval=1/17))(states)
+        net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/17, maxval=1/17))(states)
+        net = layers.BatchNormalization()(net)
+        net = layers.LeakyReLU(1e-2)(net)
+        
+        net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/14, maxval=1/14))(states)
         net = layers.BatchNormalization()(net)
         net = layers.LeakyReLU(1e-2)(net)
 
@@ -73,7 +77,7 @@ class Actor:
         # Incorporate any additional losses here (e.g. from regularizers)
 
         # Define optimizer and training function
-        optimizer = optimizers.Adam(lr=1e-4)
+        optimizer = optimizers.Adam(lr=1e-3)
         updates_op = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         self.train_fn = K.function(
             inputs=[self.model.input, action_gradients, K.learning_phase()],

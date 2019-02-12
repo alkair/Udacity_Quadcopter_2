@@ -20,6 +20,7 @@ class newTask():
         self.init_pose=init_pose
         self.sim = PhysicsSim(init_pose, init_velocities, init_angle_velocities, runtime) 
         self.action_repeat = 3
+        self.runtime = runtime
 
         self.state_size = self.action_repeat * 6
         self.action_low = 0
@@ -32,15 +33,15 @@ class newTask():
     def get_reward(self):
         """Uses current pose of sim to return reward."""
         Betha = 10.
-        sigma = 3.0
-        pos_differece = (self.sim.pose[:3] - self.target_pos).sum()
+        sigma = 2.0
+        pos_differece = (self.sim.pose[:3] - self.target_pos).sum() / (1+self.sim.time)
         x = -1.0 * (pos_differece**2)/(2.0*(sigma**2))
         #if self.init_pose[2] > self.sim.pose[2]:
         #    reward = Betha * math.exp(x) - 0.1*abs(self.init_pose[2] - self.sim.pose[2])
        # else:
-        reward = Betha * math.exp(x)
+        #reward = (Betha * math.exp(x)) 
         
-        #reward = 1.-.5*(abs(self.sim.pose[:3] - self.target_pos)).sum()
+        reward = 1.-.5*(abs(self.sim.pose[:3] - self.target_pos)).sum()
         return reward
 
     def step(self, rotor_speeds):

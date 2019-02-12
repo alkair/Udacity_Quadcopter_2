@@ -64,7 +64,13 @@ class Critic:
         net = layers.LeakyReLU(1e-2)(net)
         
         # Fully connected and batch normalization
-        net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg))(net)
+
+        
+        net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/17, maxval=1/17))(net)
+        net = layers.BatchNormalization()(net)
+        net = layers.LeakyReLU(1e-2)(net)
+        
+        net = layers.Dense(units=200, kernel_regularizer=regularizers.l2(l2_reg), kernel_initializer=initializers.RandomUniform(minval=-1/14, maxval=1/14))(net)
         net = layers.BatchNormalization()(net)
         net = layers.LeakyReLU(1e-2)(net)
 
@@ -77,7 +83,7 @@ class Critic:
         self.model = models.Model(inputs=[states, actions], outputs=Q_values)
 
         # Define optimizer and compile model for training with built-in loss function
-        optimizer = optimizers.Adam(lr=1e-3)
+        optimizer = optimizers.Adam(lr=1e-2)
         self.model.compile(optimizer=optimizer, loss='mse')
 
         # Compute action gradients (derivative of Q values w.r.t. to actions)
